@@ -7,6 +7,10 @@ interface TutorialNarrationProps {
   slideKey: string;
 }
 
+/** ~50ms per character, ~1.8s pause between lines */
+const CHAR_MS = 52;
+const LINE_PAUSE_MS = 1800;
+
 export const TutorialNarration = ({ lines, slideKey }: TutorialNarrationProps) => {
   const [lineIndex, setLineIndex] = useState(0);
   const [displayed, setDisplayed] = useState("");
@@ -27,15 +31,15 @@ export const TutorialNarration = ({ lines, slideKey }: TutorialNarrationProps) =
       if (charIndex >= currentLine.length) {
         clearInterval(typeTimer);
         if (lineIndex < lines.length - 1) {
-          setTimeout(() => setLineIndex((p) => p + 1), 850);
+          setTimeout(() => setLineIndex((p) => p + 1), LINE_PAUSE_MS);
         }
       }
-    }, 26);
+    }, CHAR_MS);
     return () => clearInterval(typeTimer);
   }, [currentLine, lineIndex, lines.length]);
 
   return (
-    <motion.div className="space-y-4 min-h-[8rem]">
+    <div className="space-y-4 min-h-[8rem]">
       <AnimatePresence mode="wait">
         <motion.div
           key={`${slideKey}-${lineIndex}`}
@@ -65,6 +69,6 @@ export const TutorialNarration = ({ lines, slideKey }: TutorialNarrationProps) =
           />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 };

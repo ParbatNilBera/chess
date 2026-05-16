@@ -1,8 +1,7 @@
 import { Chessboard } from "react-chessboard";
 import { useMemo, type CSSProperties } from "react";
 import type { Square } from "chess.js";
-import { BOARD_THEMES } from "../../constants/theme";
-import type { ThemeMode } from "../../types";
+import type { BoardColorSet } from "../../constants/boardPresets";
 
 interface ChessBoardProps {
   fen: string;
@@ -15,7 +14,7 @@ interface ChessBoardProps {
   onSquareClick: (square: Square) => void;
   arePiecesDraggable: boolean;
   boardWidth?: number;
-  theme: ThemeMode;
+  boardColors: BoardColorSet;
 }
 
 const lastMoveRing = "inset 0 0 0 3px rgba(155, 199, 0, 0.85)";
@@ -31,10 +30,8 @@ export const ChessBoard = ({
   onSquareClick,
   arePiecesDraggable,
   boardWidth,
-  theme,
+  boardColors: colors,
 }: ChessBoardProps) => {
-  const colors = BOARD_THEMES[theme];
-
   const customSquareStyles = useMemo(() => {
     const styles: Record<string, CSSProperties> = {};
 
@@ -52,10 +49,6 @@ export const ChessBoard = ({
     if (selectedSquare) {
       styles[selectedSquare] = {
         backgroundColor: colors.highlight,
-        ...(lastMove &&
-        (selectedSquare === lastMove.from || selectedSquare === lastMove.to)
-          ? {}
-          : {}),
       };
     }
 
@@ -75,20 +68,10 @@ export const ChessBoard = ({
     }
 
     return styles;
-  }, [
-    checkSquare,
-    colors.check,
-    colors.highlight,
-    colors.lastMoveFrom,
-    colors.lastMoveTo,
-    colors.legal,
-    lastMove,
-    legalTargets,
-    selectedSquare,
-  ]);
+  }, [checkSquare, colors, lastMove, legalTargets, selectedSquare]);
 
   return (
-    <div className="rounded-xl overflow-hidden shadow-2xl shadow-black/40 ring-1 ring-stone-700/50">
+    <div className="rounded-xl overflow-hidden shadow-2xl shadow-black/40 ring-1 ring-stone-700/50 mx-auto w-fit max-w-full">
       <Chessboard
         position={fen}
         boardOrientation={orientation}

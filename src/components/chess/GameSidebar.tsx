@@ -27,6 +27,7 @@ interface GameSidebarProps {
   isAiThinking: boolean;
   canUndo: boolean;
   moveCount: number;
+  compact?: boolean;
   onUndo: () => void;
   onRestart: () => void;
   onHome: () => void;
@@ -42,6 +43,7 @@ export const GameSidebar = ({
   isAiThinking,
   canUndo,
   moveCount,
+  compact = false,
   onUndo,
   onRestart,
   onHome,
@@ -65,9 +67,39 @@ export const GameSidebar = ({
     return turn === "w" ? "You" : "AI";
   };
 
+  if (compact) {
+    return (
+      <div className="space-y-2 w-full">
+        <div className="rounded-xl border border-stone-700/60 bg-stone-900/60 px-3 py-2 flex items-center justify-between gap-2">
+          <p
+            className={`text-xs font-medium text-stone-200 leading-tight flex-1 min-w-0 truncate ${
+              isAiThinking ? "animate-pulse text-amber-300" : ""
+            }`}
+          >
+            {statusMessage}
+          </p>
+          <Badge variant={statusVariant}>{turnBadge()}</Badge>
+        </div>
+        <div className="grid grid-cols-1 gap-2">
+          <div className="rounded-xl border border-stone-700/50 bg-stone-900/50 p-2">
+            <p className="text-[10px] uppercase tracking-wider text-stone-500 mb-1.5">
+              Captured
+            </p>
+            <CapturedPieces captured={captured} compact />
+          </div>
+          <div className="rounded-xl border border-stone-700/50 bg-stone-900/50 p-2">
+            <p className="text-[10px] uppercase tracking-wider text-stone-500 mb-1.5">
+              Moves ({moveCount})
+            </p>
+            <MoveHistory moves={moveHistory} compact />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <aside className="flex flex-col gap-4 w-full lg:w-80 xl:w-96 shrink-0">
-      {/* Status */}
       <Card className="overflow-hidden p-0">
         <div className="bg-gradient-to-r from-amber-900/30 to-stone-900/50 px-4 py-3 border-b border-stone-700/50">
           <div className="flex items-center justify-between gap-2">
@@ -104,17 +136,14 @@ export const GameSidebar = ({
         </div>
       </Card>
 
-      {/* Captured */}
       <Card title="Captured Pieces" className="p-4">
         <CapturedPieces captured={captured} />
       </Card>
 
-      {/* History */}
       <Card title="Move History" className="p-4">
         <MoveHistory moves={moveHistory} />
       </Card>
 
-      {/* Actions */}
       <div className="grid grid-cols-3 gap-2 pt-1">
         <Button
           variant="secondary"
@@ -122,8 +151,6 @@ export const GameSidebar = ({
           icon={<IoArrowUndo className="w-4 h-4" />}
           onClick={onUndo}
           disabled={!canUndo}
-          className="!px-2"
-          title="Undo last move"
         >
           Undo
         </Button>
@@ -133,7 +160,6 @@ export const GameSidebar = ({
           icon={<IoRefresh className="w-4 h-4" />}
           onClick={onRestart}
           disabled={isAiThinking}
-          className="!px-2"
         >
           Restart
         </Button>
@@ -142,7 +168,6 @@ export const GameSidebar = ({
           size="sm"
           icon={<IoHome className="w-4 h-4" />}
           onClick={onHome}
-          className="!px-2"
         >
           Home
         </Button>

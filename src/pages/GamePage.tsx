@@ -1,27 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Square } from "chess.js";
 import { useChessGame } from "../hooks/useChessGame";
 import { useAI } from "../hooks/useAI";
-import { useTheme } from "../hooks/useTheme";
-import type { Difficulty, GameMode } from "../types";
+import { useSettings } from "../context/SettingsContext";
 import { ChessBoard } from "../components/chess/ChessBoard";
 import { GameSidebar } from "../components/chess/GameSidebar";
 import { PromotionDialog } from "../components/chess/PromotionDialog";
 import { GameResultModal } from "../components/chess/GameResultModal";
+import { MobileGameBar } from "../components/game/MobileGameBar";
+import { TopBar } from "../components/layout/TopBar";
 import { Footer } from "../components/layout/Footer";
 
-interface GamePageProps {
-  difficulty: Difficulty;
-  gameMode: GameMode;
-  onHome: () => void;
-}
-
-export const GamePage = ({ difficulty, gameMode, onHome }: GamePageProps) => {
+export const GamePage = () => {
+  const navigate = useNavigate();
+  const { gameMode, difficulty, boardColors } = useSettings();
   const isVsAI = gameMode === "ai";
-  const { theme } = useTheme();
   const { computeMove, cancelAI } = useAI();
   const boardContainerRef = useRef<HTMLDivElement>(null);
-  const [boardWidth, setBoardWidth] = useState(400);
+  const [boardWidth, setBoardWidth] = useState(320);
   const aiTriggeredRef = useRef(false);
   const chessRef = useRef<ReturnType<typeof useChessGame> | null>(null);
 
@@ -46,9 +43,13 @@ export const GamePage = ({ difficulty, gameMode, onHome }: GamePageProps) => {
 
   useEffect(() => {
     const updateWidth = () => {
+      const padding = 24;
+      const max = window.innerWidth < 1024 ? window.innerWidth - padding : 560;
       if (boardContainerRef.current) {
-        const width = boardContainerRef.current.offsetWidth;
-        setBoardWidth(Math.min(width, 560));
+        const containerW = boardContainerRef.current.offsetWidth;
+        setBoardWidth(Math.min(containerW, max, 560));
+      } else {
+        setBoardWidth(Math.min(max, 560));
       }
     };
     updateWidth();
@@ -58,15 +59,12 @@ export const GamePage = ({ difficulty, gameMode, onHome }: GamePageProps) => {
 
   const triggerAI = useCallback(async () => {
     if (!isVsAI) return;
-
     const state = chessRef.current;
     if (!state || state.isGameOver || state.isAiThinking || state.turn !== "b") {
       return;
     }
-
     state.setThinking(true);
     const move = await computeMove(state.fen, difficulty);
-
     const latest = chessRef.current;
     if (move && latest && latest.turn === "b" && !latest.isGameOver) {
       latest.applyAIMove(move);
@@ -77,25 +75,15 @@ export const GamePage = ({ difficulty, gameMode, onHome }: GamePageProps) => {
 
   useEffect(() => {
     if (!isVsAI) return;
-
     if (chess.turn === "b" && !chess.isGameOver && !chess.isAiThinking) {
       if (!aiTriggeredRef.current) {
         aiTriggeredRef.current = true;
         void triggerAI();
       }
     }
-  }, [
-    chess.fen,
-    chess.turn,
-    chess.isGameOver,
-    chess.isAiThinking,
-    isVsAI,
-    triggerAI,
-  ]);
+  }, [chess.fen, chess.turn, chess.isGameOver, chess.isAiThinking, isVsAI, triggerAI]);
 
-  useEffect(() => {
-    return () => cancelAI();
-  }, [cancelAI]);
+  useEffect(() => () => cancelAI(), [cancelAI]);
 
   useEffect(() => {
     if (isVsAI && chess.turn === "w" && !chess.isGameOver) {
@@ -118,17 +106,19 @@ export const GamePage = ({ difficulty, gameMode, onHome }: GamePageProps) => {
 
   const handleHome = () => {
     cancelAI();
-    onHome();
+    navigate("/");
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1 px-4 py-6 sm:py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start justify-center">
+    <div className="flex flex-col min-h-[100dvh]">
+      <TopBar title="Game" showBack backTo="/" />
+
+      <div className="flex-1 flex flex-col lg:pb-0 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+        <div className="flex-1 px-3 sm:px-4 py-3 sm:py-6 max-w-6xl mx-auto w-full">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start justify-center">
             <div
               ref={boardContainerRef}
-              className="w-full max-w-[min(100%,560px)] mx-auto lg:mx-0 lg:flex-1"
+              className="w-full flex justify-center shrink-0 lg:flex-1"
             >
               <ChessBoard
                 fen={chess.fen}
@@ -140,27 +130,61 @@ export const GamePage = ({ difficulty, gameMode, onHome }: GamePageProps) => {
                 onSquareClick={chess.handleSquareClick}
                 arePiecesDraggable={chess.canInteract}
                 boardWidth={boardWidth}
-                theme={theme}
+                boardColors={boardColors}
               />
             </div>
 
-            <GameSidebar
-              turn={chess.turn}
-              status={chess.status}
-              gameMode={gameMode}
-              difficulty={difficulty}
-              moveHistory={chess.moveHistory}
-              captured={chess.captured}
-              moveCount={chess.moveHistory.length}
-              isAiThinking={chess.isAiThinking}
-              canUndo={chess.canUndo}
-              onUndo={handleUndo}
-              onRestart={handleRestart}
-              onHome={handleHome}
-            />
+            {/* Mobile compact panel */}
+            <div className="w-full lg:hidden">
+              <GameSidebar
+                compact
+                turn={chess.turn}
+                status={chess.status}
+                gameMode={gameMode}
+                difficulty={difficulty}
+                moveHistory={chess.moveHistory}
+                captured={chess.captured}
+                moveCount={chess.moveHistory.length}
+                isAiThinking={chess.isAiThinking}
+                canUndo={chess.canUndo}
+                onUndo={handleUndo}
+                onRestart={handleRestart}
+                onHome={handleHome}
+              />
+            </div>
+
+            {/* Desktop full sidebar */}
+            <div className="hidden lg:block">
+              <GameSidebar
+                turn={chess.turn}
+                status={chess.status}
+                gameMode={gameMode}
+                difficulty={difficulty}
+                moveHistory={chess.moveHistory}
+                captured={chess.captured}
+                moveCount={chess.moveHistory.length}
+                isAiThinking={chess.isAiThinking}
+                canUndo={chess.canUndo}
+                onUndo={handleUndo}
+                onRestart={handleRestart}
+                onHome={handleHome}
+              />
+            </div>
           </div>
         </div>
+
+        <div className="hidden lg:block">
+          <Footer />
+        </div>
       </div>
+
+      <MobileGameBar
+        canUndo={chess.canUndo}
+        isAiThinking={chess.isAiThinking}
+        onUndo={handleUndo}
+        onRestart={handleRestart}
+        onHome={handleHome}
+      />
 
       <PromotionDialog
         isOpen={!!chess.pendingPromotion}
@@ -176,8 +200,6 @@ export const GamePage = ({ difficulty, gameMode, onHome }: GamePageProps) => {
         onRestart={handleRestart}
         onHome={handleHome}
       />
-
-      <Footer />
     </div>
   );
 };
