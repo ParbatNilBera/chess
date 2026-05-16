@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Code", "Fira Code", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out forwards;
+}
+
+.animation-delay-100 {
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.25s ease-out forwards;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #57534e transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #57534e;
+  border-radius: 3px;
+}
+
+[data-theme="light"] .text-stone-100 {
+  color: #1c1917;
+}
+
+[data-theme="light"] .text-stone-200 {
+  color: #292524;
+}
+
+[data-theme="light"] .text-stone-300 {
+  color: #44403c;
+}
+
+[data-theme="light"] .text-stone-400 {
+  color: #57534e;
+}
+
+[data-theme="light"] .bg-stone-900\/70 {
+  background-color: rgb(255 255 255 / 0.85);
+}
+
+[data-theme="light"] .border-stone-700 {
+  border-color: #d6d3d1;
+}
